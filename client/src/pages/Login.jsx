@@ -28,7 +28,7 @@ const Login = () =>{
         e.preventDefault()
         try {
          await login(inputs)
-         naviagte("/Home")
+         naviagte("/")
       
     
         } catch(err) {

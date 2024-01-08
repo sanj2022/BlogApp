@@ -1,35 +1,76 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import Edit from "../img/edit.png"
 import Delete from "../img/delete.png"
 import User from "../img/user.png"
 import Menu from "../components/Menu"
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
+import { useState } from 'react'
+import axios from "axios";
+import moment from "moment";
+import { AuthContext } from '../context/authContext'
 
  
 const Single = () =>{
+  const[post , setPost] = useState({})
+
+  const postId = useLocation().pathname.split("/")[2];
+  const {currentUser} = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  console.log(postId)
+
+  useEffect(() => {
+    const fetchData  = async () => {
+      try {
+    const res= await axios.get(`http://localhost:8800/api/posts/${postId}`);
+    setPost(res.data)
+      } catch (err) {
+        console.log(err)
+      }
+    };
+    fetchData();
+  },[postId]);
+
+  const handleDelete = async () => {
+    try {
+   const res= await axios.delete(`http://localhost:8800/api/posts/${postId}`, {
+    withCredentials: true, // Include cookies in the request
+    headers: {
+      'Content-Type': 'application/json',
+      // Other headers as needed
+    },
+  });
+   navigate("/")
+    } catch (err) {
+      console.log(err)
+    }
+  };
+console.log(post)
     return (
         <div className = 'single'>
             <div className ="content">
-            <img src ="https://images.pexels.com/photos/7008010/pexels-photo-7008010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt =""></img>
+            <img src={`../upload/${post.img}`} alt="" />
             <div className="user">
-            <img src ={User} alt =""></img>
+             {/* // console.log({post.userImg}) */}
+             <img src ={post.userImg} alt =""></img>
         <div className="info">
-        <span> Sanjana</span>
-        <p>Posted 2 days ago </p>
+        <span> {post.username}</span>
+        <p>Posted {moment(post.date).fromNow()}</p>
      </div>
-     <div className='edit'>
-        <Link to ={'/Write?edit=1'}>
+    { currentUser.username === post.username && 
+    (<div className='edit'>
+        <Link to ={'/Write?edit=1' } state ={post}>
         <img src={Edit} alt=""/>
         </Link>
-        <img src={Delete} alt=""/>
+        <img onClick={handleDelete} src={Delete} alt=""/>
         </div>
+        )}
      </div>
-     <h1>Lorem ipsum dolor sit amet consectetur adipisicing elit"</h1>
-      <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum</p>
-    <br></br>
-    <p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.</p>
+     <h1>{post.title}</h1>
+      {post.desc}
      </div>
-        <Menu/>
+        <Menu cat ={post.cat}/>
       </div>
     )
 }
